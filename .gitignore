@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.zip
+venv/
+.venv/
+data/cifar-100-python/
+*.pt
+*.pth
+*.ckpt
