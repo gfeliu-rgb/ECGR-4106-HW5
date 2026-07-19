@@ -1,0 +1,6 @@
+model_name,patch_size,embed_dim,depth,heads,mlp_dim,parameter_count,flops_forward,train_time_per_epoch_sec,final_train_loss,final_val_loss,test_accuracy_pct,notes
+vit_patch4_dim256_d4_h4,4,256,4,4,1024,,,,,,,TODO
+vit_patch4_dim512_d8_h8,4,512,8,8,2048,,,,,,,TODO
+vit_patch8_dim256_d4_h4,8,256,4,4,1024,,,,,,,TODO
+vit_patch8_dim512_d8_h8,8,512,8,8,2048,,,,,,,TODO
+resnet18,,,,,,,,,,,,TODO

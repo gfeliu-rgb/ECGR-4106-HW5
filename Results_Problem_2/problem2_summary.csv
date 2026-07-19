@@ -1,0 +1,4 @@
+model_name,pretrained,frozen_backbone,parameter_count,train_time_per_epoch_sec,final_train_loss,final_val_loss,test_accuracy_pct,notes
+swin_tiny_pretrained,True,True,,,,,,TODO
+swin_small_pretrained,True,True,,,,,,TODO
+swin_scratch,False,False,,,,,,TODO
