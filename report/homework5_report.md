@@ -1,9 +1,10 @@
 # Homework 5: Vision Transformers for Image Classification
 
-**Name:** Gilberto Feliu  
-**Student ID:** 801257813  
-**Assignment:** Homework 5  
-**GitHub Repository:** <https://github.com/gfeliu-rgb/ECGR-5106-HW5>
+**Name:** Gilberto Feliu<br>
+**Student ID:** 801257813<br>
+**Course:** ECGR 4106<br>
+**Assignment:** Homework 5<br>
+**GitHub Repository:** <https://github.com/gfeliu-rgb/ECGR-4106-HW5>
 
 ## Late Submission Note
 

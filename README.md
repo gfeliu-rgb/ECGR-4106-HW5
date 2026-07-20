@@ -1,8 +1,8 @@
-# ECGR 5106 Homework 5
+# ECGR 4106 Homework 5
 
 This repository is the Homework 5 workspace for Gilberto Feliu.
 
-Repository link for the report: <https://github.com/gfeliu-rgb/ECGR-5106-HW5>
+Repository link for the report: <https://github.com/gfeliu-rgb/ECGR-4106-HW5>
 
 ## Files
 
