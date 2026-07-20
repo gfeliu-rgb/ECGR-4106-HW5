@@ -20,11 +20,11 @@
 This homework was submitted late because I had a family medical emergency. My grandmother has pancreatic cancer and was hospitalized during the week of the deadline, which disrupted the time I had planned for completing and packaging the assignment.
 
 \section*{Dataset and Experimental Setup}
-Both problems use CIFAR-100 through \texttt{torchvision.datasets.CIFAR100}. Training images are normalized with CIFAR-100 channel statistics. Problem 1 uses 32 by 32 inputs with random crop, padding, and horizontal flip for training; evaluation uses only tensor conversion and normalization. Problem 2 uses 224 by 224 inputs for the pretrained Swin rows. The scratch Swin run was completed as a CPU fallback with native 32 by 32 CIFAR-100 inputs so that a full five-epoch scratch baseline could be measured in the current environment.
+Both problems use CIFAR-100 through \texttt{torchvision.datasets.CIFAR100}. Training images are normalized with CIFAR-100 channel statistics. Problem 1 uses 32 by 32 inputs with random crop, padding, and horizontal flip for training; evaluation uses only tensor conversion and normalization. Problem 2 uses 224 by 224 resized inputs for Swin-Tiny, Swin-Small, and the scratch Swin baseline.
 
-The scripts use CPU fallback with \texttt{torch.device("cuda" if torch.cuda.is\_available() else "cpu")}. The completed CSV summaries record CUDA for all Problem 1 runs and for the two completed pretrained Swin runs. The current verification session did not have a usable CUDA device, so the completed training runs were not repeated here. Package versions used in the current environment were: \texttt{torch 2.12.0+cu130}, \texttt{torchvision 0.27.0+cu130}, \texttt{transformers 5.14.1}, \texttt{pandas 2.2.3}, \texttt{numpy 2.2.6}, and \texttt{matplotlib 3.10.9}.
+The scripts select CUDA when available and otherwise run on CPU. The completed CSV summaries record CUDA for all Problem 1 runs and all Problem 2 runs. The final Problem 2 experiments were run with approved GPU access on an NVIDIA GeForce RTX 4070. Package versions used in the current environment were: \texttt{torch 2.12.0+cu130}, \texttt{torchvision 0.27.0+cu130}, \texttt{transformers 5.14.1}, \texttt{pandas 2.2.3}, \texttt{numpy 2.2.6}, and \texttt{matplotlib 3.10.9}.
 
-Important status note: Problem 1 has 10-epoch results for all planned rows. Problem 2 now has completed scratch Swin metrics, but Swin-Tiny and Swin-Small still reflect one finished epoch rather than the originally planned five-epoch schedule.
+Important status note: Problem 1 has 10-epoch results for all planned rows. Problem 2 has 5-epoch results for all planned rows.
 
 \section*{Reproducibility and Metric Details}
 CIFAR-100 contains 50,000 training images and 10,000 test images across 100 classes. The scripts train on the official training split and evaluate on the official test split. The CSV column names use \texttt{val\_loss} and \texttt{val\_accuracy\_pct}, but these values are computed on the CIFAR-100 test split because no separate validation split was created for this homework. Randomness is controlled with seed \texttt{4106} for Python and PyTorch.
@@ -35,8 +35,8 @@ All models use cross-entropy loss and top-1 accuracy. Training time is measured 
 python src/hw5_vit_resnet.py --run-all-vit --run-resnet
 python src/hw5_swin.py --run-pretrained swin_tiny_pretrained
 python src/hw5_swin.py --run-pretrained swin_small_pretrained
-python src/hw5_swin.py --run-scratch --epochs 5 --batch-size 128 \
-  --image-size 32 --num-threads 4
+python src/hw5_swin.py --run-scratch --epochs 5 --batch-size 32 \
+  --image-size 224
 python tools/make_hw5_plots.py
 \end{verbatim}
 
@@ -87,7 +87,7 @@ The goal of Problem 2 is to compare pretrained Swin-Tiny and Swin-Small head-onl
 \subsection*{Implementation Summary}
 The pretrained Swin models are loaded from Hugging Face using the \texttt{SwinForImageClassification} loader. The classifier head is replaced for 100 CIFAR-100 classes with \texttt{ignore\_mismatched\_sizes=True}. For the pretrained experiments, all backbone parameters are frozen and only classifier parameters remain trainable. The script uses Adam, cross-entropy loss, batch size 32, learning rate \texttt{2e-5}, and 224 by 224 resized CIFAR-100 images.
 
-The scratch model uses \texttt{torchvision.models.swin\_t(weights=None)} with its head replaced for 100 classes. Unlike the pretrained runs, all scratch-model parameters are trainable. Because CUDA was not available in the verification session, the measured scratch run uses native 32 by 32 CIFAR-100 inputs, batch size 128, learning rate \texttt{0.001}, and 5 epochs on CPU.
+The scratch model uses \texttt{torchvision.models.swin\_t(weights=None)} with its head replaced for 100 classes. Unlike the pretrained runs, all scratch-model parameters are trainable. The scratch run uses 224 by 224 resized CIFAR-100 inputs, batch size 32, learning rate \texttt{0.001}, and 5 epochs on CUDA.
 
 \subsection*{Results}
 \begin{center}
@@ -96,29 +96,27 @@ The scratch model uses \texttt{torchvision.models.swin\_t(weights=None)} with it
 \hline
 Model & Pretrained & Frozen & Total Params & Trainable Params & Time/Epoch & Val Loss & Test Acc. & Status \\
 \hline
-Swin-Tiny & Yes & Yes & 27,596,254 & 76,900 & 851.96 & 2.2969 & 60.56\% & 1 epoch, CUDA \\
+Swin-Tiny & Yes & Yes & 27,596,254 & 76,900 & 166.32 & 1.7003 & 64.78\% & 5 epochs, CUDA \\
 \hline
-Swin-Small & Yes & Yes & 48,914,158 & 76,900 & 678.62 & 2.0581 & 64.74\% & 1 epoch, CUDA \\
+Swin-Small & Yes & Yes & 48,914,158 & 76,900 & 254.73 & 1.4918 & 68.74\% & 5 epochs, CUDA \\
 \hline
-Scratch Swin & No & No & 27,596,254 & 27,596,254 & 1244.41 & 2.8027 & 29.19\% & 5 epochs, CPU, 32x32 \\
+Scratch Swin & No & No & 27,596,254 & 27,596,254 & 656.55 & 4.6087 & 1.00\% & 5 epochs, CUDA \\
 \hline
 \end{tabular}
 \end{center}
 
 \subsection*{Analysis}
-The completed pretrained runs show a clear transfer-learning advantage after one epoch. Swin-Small reached 64.74\% test accuracy, and Swin-Tiny reached 60.56\%. These accuracies are much higher than the from-scratch ViT and ResNet one-epoch results in Problem 1 because the Swin backbones already contain useful image features from pretraining.
+The completed pretrained runs show a clear transfer-learning advantage after five epochs. Swin-Small reached 68.74\% test accuracy, and Swin-Tiny reached 64.78\%. These accuracies are much higher than the from-scratch transformer results because the Swin backbones already contain useful image features from pretraining.
 
 Swin-Small performed better than Swin-Tiny in the completed artifacts, with lower validation loss and higher accuracy. The trainable parameter count is the same for both pretrained rows because the backbone is frozen and only the classifier head is trained. The total parameter count is higher for Swin-Small, so it has a larger memory footprint even though the optimizer updates the same 76,900 classifier parameters.
 
-The scratch Swin baseline reached 29.19\% accuracy after five CPU epochs. This is well below both pretrained Swin rows even though the pretrained rows only ran for one epoch, which supports the expected advantage of transfer learning. The comparison is not perfectly controlled because the scratch row used native 32 by 32 inputs and CPU timing, while the pretrained rows used 224 by 224 inputs and CUDA. The accuracy gap is still large enough to show that the pretrained representations are much more effective under a short schedule.
+The scratch Swin baseline stayed near chance accuracy, reaching 1.00\% after five CUDA epochs. This is well below both pretrained Swin rows even though the scratch model has the same total parameter count as Swin-Tiny and updates all 27.6 million parameters. The result supports the expected advantage of transfer learning: with a short five-epoch schedule, the randomly initialized Swin model did not learn useful CIFAR-100 features. A stronger from-scratch transformer result would likely require a longer schedule, warmup, tuned learning-rate decay, stronger augmentation, and additional regularization.
 
 \begin{center}
 \includegraphics[width=0.9\linewidth]{../Results_Problem_2/problem2_training_curves.png}
 \end{center}
 
 \section*{Conclusion}
-The results support two main takeaways. First, ResNet-18 substantially outperformed all from-scratch ViT configurations after 10 epochs on CIFAR-100, and ViT-A was the best transformer configuration among the four tested. Second, pretrained Swin feature extractors were much stronger than scratch Swin even with fewer completed epochs, showing the practical value of transfer learning under a short training schedule.
-
-To exactly match the intended Problem 2 schedule, the remaining work is to rerun Swin-Tiny and Swin-Small for the full five epochs on a machine with a usable GPU.
+The results support two main takeaways. First, ResNet-18 substantially outperformed all from-scratch ViT configurations after 10 epochs on CIFAR-100, and ViT-A was the best transformer configuration among the four tested. Second, pretrained Swin feature extractors were much stronger than scratch Swin under the same five-epoch Problem 2 schedule, showing the practical value of transfer learning when compute and training time are limited.
 
 \end{document}

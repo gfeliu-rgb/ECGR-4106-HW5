@@ -1,4 +1,4 @@
 model_name,pretrained,frozen_backbone,total_parameter_count,parameter_count,train_time_per_epoch_sec,final_train_loss,final_val_loss,test_accuracy_pct,notes
-swin_tiny_pretrained,True,True,27596254,76900.0,851.9640516459986,3.29316744243145,2.29686228659153,60.56,device=cuda
-swin_small_pretrained,True,True,48914158,76900.0,678.6236368139944,3.131478953227997,2.0581296045064925,64.74,device=cuda
-swin_scratch,False,False,27596254,27596254,1244.4099737434,2.9030607466125486,2.8027206829071045,29.19,"device=cpu,image_size=32,batch_size=128"
+swin_tiny_pretrained,True,True,27596254,76900.0,166.31651043320016,1.8033740415954589,1.7002533596038818,64.78,"device=cuda,image_size=224,batch_size=32"
+swin_small_pretrained,True,True,48914158,76900.0,254.73263896200007,1.588866813812256,1.4918486946105958,68.74,"device=cuda,image_size=224,batch_size=32"
+swin_scratch,False,False,27596254,27596254,656.5533281846001,4.609510808868408,4.608737641906738,1.0,"device=cuda,image_size=224,batch_size=32"

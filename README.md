@@ -29,4 +29,4 @@ python tools/make_hw5_plots.py
 - The structure is aligned with the course `Homework_5` repository layout.
 - Only reusable scaffold elements were mirrored here. No third-party homework solutions were copied.
 - Problem 1 includes completed 10-epoch results for all planned models.
-- Problem 2 includes one completed epoch for each pretrained Swin model and a completed 5-epoch CPU fallback scratch Swin run.
+- Problem 2 includes completed 5-epoch CUDA results for pretrained Swin-Tiny, pretrained Swin-Small, and scratch Swin.
