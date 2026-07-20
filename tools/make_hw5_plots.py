@@ -46,13 +46,13 @@ def maybe_plot_history(csv_path: Path, output_name: str, title: str) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     for model_name, group in df.groupby("model_name"):
         if "val_loss" in group.columns:
-            axes[0].plot(group["epoch"], group["val_loss"], label=f"{model_name} val")
+            axes[0].plot(group["epoch"], group["val_loss"], marker="o", label=f"{model_name} val")
         if "train_loss" in group.columns:
-            axes[0].plot(group["epoch"], group["train_loss"], linestyle="--", label=f"{model_name} train")
+            axes[0].plot(group["epoch"], group["train_loss"], marker="x", alpha=0.72, label=f"{model_name} train")
         if "val_accuracy_pct" in group.columns:
-            axes[1].plot(group["epoch"], group["val_accuracy_pct"], label=f"{model_name} val")
+            axes[1].plot(group["epoch"], group["val_accuracy_pct"], marker="o", label=f"{model_name} val")
         if "train_accuracy_pct" in group.columns:
-            axes[1].plot(group["epoch"], group["train_accuracy_pct"], linestyle="--", label=f"{model_name} train")
+            axes[1].plot(group["epoch"], group["train_accuracy_pct"], marker="x", alpha=0.72, label=f"{model_name} train")
 
     axes[0].set_title(f"{title}: Loss")
     axes[0].set_xlabel("Epoch")
