@@ -79,9 +79,9 @@ def count_all_parameters(model: nn.Module) -> int:
 def export_default_templates() -> None:
     ensure_dirs()
     rows = [
-        SwinResult("swin_tiny_pretrained", True, True, None, None, None, None, None, None, "fill after run"),
-        SwinResult("swin_small_pretrained", True, True, None, None, None, None, None, None, "fill after run"),
-        SwinResult("swin_scratch", False, False, None, None, None, None, None, None, "fill after run"),
+        SwinResult("swin_tiny_pretrained", True, True, None, None, None, None, None, None, "template row"),
+        SwinResult("swin_small_pretrained", True, True, None, None, None, None, None, None, "template row"),
+        SwinResult("swin_scratch", False, False, None, None, None, None, None, None, "template row"),
     ]
     summary_path = RESULTS_DIR / "problem2_summary.csv"
     with summary_path.open("w", newline="", encoding="utf-8") as handle:

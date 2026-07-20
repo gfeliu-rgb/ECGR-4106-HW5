@@ -287,11 +287,11 @@ def write_summary(rows: list[ExperimentResult]) -> None:
 def export_default_templates() -> None:
     ensure_dirs()
     summary_rows = [
-        ExperimentResult("vit_patch4_dim256_d4_h4", 4, 256, 4, 4, 1024, None, None, None, None, None, None, "fill after run"),
-        ExperimentResult("vit_patch4_dim512_d8_h8", 4, 512, 8, 8, 2048, None, None, None, None, None, None, "fill after run"),
-        ExperimentResult("vit_patch8_dim256_d4_h4", 8, 256, 4, 4, 1024, None, None, None, None, None, None, "fill after run"),
-        ExperimentResult("vit_patch8_dim512_d8_h8", 8, 512, 8, 8, 2048, None, None, None, None, None, None, "fill after run"),
-        ExperimentResult("resnet18", None, None, None, None, None, None, None, None, None, None, None, "fill after run"),
+        ExperimentResult("vit_patch4_dim256_d4_h4", 4, 256, 4, 4, 1024, None, None, None, None, None, None, "template row"),
+        ExperimentResult("vit_patch4_dim512_d8_h8", 4, 512, 8, 8, 2048, None, None, None, None, None, None, "template row"),
+        ExperimentResult("vit_patch8_dim256_d4_h4", 8, 256, 4, 4, 1024, None, None, None, None, None, None, "template row"),
+        ExperimentResult("vit_patch8_dim512_d8_h8", 8, 512, 8, 8, 2048, None, None, None, None, None, None, "template row"),
+        ExperimentResult("resnet18", None, None, None, None, None, None, None, None, None, None, None, "template row"),
     ]
     write_summary(summary_rows)
     history_path = RESULTS_DIR / "problem1_history.csv"
