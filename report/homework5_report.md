@@ -17,6 +17,20 @@ The scripts use CPU fallback with `torch.device("cuda" if torch.cuda.is_availabl
 
 Important status note: Problem 1 has 10-epoch results for all planned rows. Problem 2 now has completed scratch Swin metrics, but Swin-Tiny and Swin-Small still reflect one finished epoch rather than the originally planned five-epoch schedule.
 
+## Reproducibility and Metric Details
+
+CIFAR-100 contains 50,000 training images and 10,000 test images across 100 classes. The scripts train on the official training split and evaluate on the official test split. The CSV column names use `val_loss` and `val_accuracy_pct`, but these values are computed on the CIFAR-100 test split because no separate validation split was created for this homework. Randomness is controlled with seed `4106` for Python and PyTorch.
+
+All models use cross-entropy loss and top-1 accuracy. Training time is measured as average wall-clock seconds per epoch, including evaluation at the end of each epoch. `Results_Problem_1/problem1_history.csv` and `Results_Problem_2/problem2_history.csv` contain the per-epoch losses, accuracies, and runtime values used for the plots. The main commands used to reproduce the artifacts are:
+
+```bash
+python src/hw5_vit_resnet.py --run-all-vit --run-resnet
+python src/hw5_swin.py --run-pretrained swin_tiny_pretrained
+python src/hw5_swin.py --run-pretrained swin_small_pretrained
+python src/hw5_swin.py --run-scratch --epochs 5 --batch-size 128 --image-size 32 --num-threads 4
+python tools/make_hw5_plots.py
+```
+
 ## Problem 1: Vision Transformer from Scratch vs. ResNet-18
 
 ### Objective
@@ -73,17 +87,17 @@ The scratch model uses `torchvision.models.swin_t(weights=None)` with its head r
 
 ### Results Table
 
-| Model | Pretrained | Frozen Backbone | Trainable Params | Train Time / Epoch (s) | Final Val Loss | Test Accuracy (%) | Status |
-|---|---|---|---:|---:|---:|---:|---|
-| Swin-Tiny | Yes | Yes | 76,900 | 851.96 | 2.2969 | 60.56 | 1 epoch completed, CUDA |
-| Swin-Small | Yes | Yes | 76,900 | 678.62 | 2.0581 | 64.74 | 1 epoch completed, CUDA |
-| Scratch Swin | No | No | 27,596,254 | 1244.41 | 2.8027 | 29.19 | 5 epochs, CPU, 32x32 |
+| Model | Pretrained | Frozen Backbone | Total Params | Trainable Params | Train Time / Epoch (s) | Final Val Loss | Test Accuracy (%) | Status |
+|---|---|---|---:|---:|---:|---:|---:|---|
+| Swin-Tiny | Yes | Yes | 27,596,254 | 76,900 | 851.96 | 2.2969 | 60.56 | 1 epoch completed, CUDA |
+| Swin-Small | Yes | Yes | 48,914,158 | 76,900 | 678.62 | 2.0581 | 64.74 | 1 epoch completed, CUDA |
+| Scratch Swin | No | No | 27,596,254 | 27,596,254 | 1244.41 | 2.8027 | 29.19 | 5 epochs, CPU, 32x32 |
 
 ### Analysis
 
 The completed pretrained runs show a clear transfer-learning advantage after one epoch. Swin-Small reached 64.74 percent test accuracy, and Swin-Tiny reached 60.56 percent. These accuracies are much higher than the from-scratch ViT and ResNet one-epoch results in Problem 1 because the Swin backbones already contain useful image features from pretraining.
 
-Swin-Small performed better than Swin-Tiny in the completed artifacts, with lower validation loss and higher accuracy. The trainable parameter count is the same in the table because the backbone is frozen and only the classifier head is trained. The full model is larger for Swin-Small, but the current script records trainable parameters, which is the most relevant count for head-only fine-tuning cost.
+Swin-Small performed better than Swin-Tiny in the completed artifacts, with lower validation loss and higher accuracy. The trainable parameter count is the same for both pretrained rows because the backbone is frozen and only the classifier head is trained. The total parameter count is higher for Swin-Small, so it has a larger memory footprint even though the optimizer updates the same 76,900 classifier parameters.
 
 The scratch Swin baseline reached 29.19 percent accuracy after five CPU epochs. This is well below both pretrained Swin rows even though the pretrained rows only ran for one epoch, which supports the expected advantage of transfer learning. The comparison is not perfectly controlled because the scratch row used native 32 by 32 inputs and CPU timing, while the pretrained rows used 224 by 224 inputs and CUDA. The accuracy gap is still large enough to show that the pretrained representations are much more effective under a short schedule.
 

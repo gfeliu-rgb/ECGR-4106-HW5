@@ -47,6 +47,7 @@ class SwinResult:
     model_name: str
     pretrained: bool
     frozen_backbone: bool
+    total_parameter_count: int | None
     parameter_count: int | None
     train_time_per_epoch_sec: float | None
     final_train_loss: float | None
@@ -71,12 +72,16 @@ def count_parameters(model: nn.Module) -> int:
     return sum(param.numel() for param in model.parameters() if param.requires_grad)
 
 
+def count_all_parameters(model: nn.Module) -> int:
+    return sum(param.numel() for param in model.parameters())
+
+
 def export_default_templates() -> None:
     ensure_dirs()
     rows = [
-        SwinResult("swin_tiny_pretrained", True, True, None, None, None, None, None, "fill after run"),
-        SwinResult("swin_small_pretrained", True, True, None, None, None, None, None, "fill after run"),
-        SwinResult("swin_scratch", False, False, None, None, None, None, None, "fill after run"),
+        SwinResult("swin_tiny_pretrained", True, True, None, None, None, None, None, None, "fill after run"),
+        SwinResult("swin_small_pretrained", True, True, None, None, None, None, None, None, "fill after run"),
+        SwinResult("swin_scratch", False, False, None, None, None, None, None, None, "fill after run"),
     ]
     summary_path = RESULTS_DIR / "problem2_summary.csv"
     with summary_path.open("w", newline="", encoding="utf-8") as handle:
@@ -179,6 +184,7 @@ def train_model(model: nn.Module, config: SwinConfig, train_loader: DataLoader, 
         model_name=config.model_name,
         pretrained=config.pretrained,
         frozen_backbone=config.frozen_backbone,
+        total_parameter_count=count_all_parameters(model),
         parameter_count=count_parameters(model),
         train_time_per_epoch_sec=average_epoch_seconds,
         final_train_loss=final["train_loss"],
@@ -298,6 +304,8 @@ def refresh_summary(results: list[SwinResult]) -> None:
         merged = []
         for record in existing.to_dict(orient="records"):
             merged.append(by_name.get(record["model_name"], record))
+        for row in merged:
+            row.setdefault("total_parameter_count", None)
         write_summary([SwinResult(**row) for row in merged])
         return
     write_summary(results)
