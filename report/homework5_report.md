@@ -83,7 +83,7 @@ The ResNet-18 baseline was strongest overall, reaching 61.20 percent test accura
 
 The training-curve figure verifies model behavior beyond final accuracy. ResNet-18 shows steadily decreasing training and test loss, so its accuracy improvement is backed by a real learning curve. ViT-A and ViT-C also show some loss reduction, but the deeper/wider ViT-B and ViT-D curves remain close to high cross-entropy loss and low accuracy, confirming that their poor final results are training behavior rather than a reporting artifact.
 
-Exported figure: `Results_Problem_1/problem1_loss_curves.png` contains per-epoch loss and accuracy curves.
+Exported figures: `Results_Problem_1/problem1_loss_curves.png` contains per-epoch loss and accuracy curves, and `Results_Problem_1/problem1_tradeoffs.png` summarizes final accuracy, runtime, parameter count, and FLOP tradeoffs.
 
 ## Problem 2: Fine-Tuning Pretrained Swin Transformers vs. Training from Scratch
 
@@ -119,7 +119,7 @@ The scratch Swin baseline stayed near chance accuracy, reaching 1.00 percent aft
 
 The Problem 2 training curves show why the final table differs across models. The pretrained Swin losses decrease each epoch and validation accuracy rises into the 60 percent range, which indicates the classifier head is fitting useful frozen features. Scratch Swin remains near cross-entropy loss `ln(100) ~= 4.605` and about 1 percent accuracy, which is chance performance for 100 classes. This confirms that the scratch model did not train meaningfully in the allotted five epochs.
 
-Exported figure: `Results_Problem_2/problem2_training_curves.png` contains per-epoch loss and accuracy curves.
+Exported figures: `Results_Problem_2/problem2_training_curves.png` contains per-epoch loss and accuracy curves, and `Results_Problem_2/problem2_tradeoffs.png` summarizes final accuracy, runtime, total parameters, trainable parameters, and fine-tuning tradeoffs.
 
 ## Conclusion
 

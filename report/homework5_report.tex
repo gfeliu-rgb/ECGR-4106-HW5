@@ -112,6 +112,11 @@ The plot below shows the per-epoch loss and accuracy curves for each Problem 1 r
 \includegraphics[width=0.9\linewidth]{../Results_Problem_1/problem1_loss_curves.png}
 \end{center}
 
+The next plot summarizes the final Problem 1 tradeoffs by comparing accuracy, average training time, parameter count, and estimated FLOPs.
+\begin{center}
+\includegraphics[width=0.9\linewidth]{../Results_Problem_1/problem1_tradeoffs.png}
+\end{center}
+
 \section*{Problem 2: Fine-Tuning Pretrained Swin Transformers vs. Training from Scratch}
 \subsection*{Objective}
 The goal of Problem 2 is to compare pretrained Swin-Tiny and Swin-Small head-only fine-tuning against a scratch Swin-style model on CIFAR-100.
@@ -152,6 +157,11 @@ The Problem 2 training curves show why the final table differs across models. Th
 The plot below shows the per-epoch loss and accuracy curves for each Problem 2 run.
 \begin{center}
 \includegraphics[width=0.9\linewidth]{../Results_Problem_2/problem2_training_curves.png}
+\end{center}
+
+The next plot summarizes the final Problem 2 tradeoffs by comparing accuracy, average training time, total parameters, trainable parameters, and the effect of freezing pretrained backbones.
+\begin{center}
+\includegraphics[width=0.9\linewidth]{../Results_Problem_2/problem2_tradeoffs.png}
 \end{center}
 
 \section*{Conclusion}
