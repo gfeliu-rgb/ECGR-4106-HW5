@@ -76,26 +76,6 @@ def count_all_parameters(model: nn.Module) -> int:
     return sum(param.numel() for param in model.parameters())
 
 
-def export_default_templates() -> None:
-    ensure_dirs()
-    rows = [
-        SwinResult("swin_tiny_pretrained", True, True, None, None, None, None, None, None, "template row"),
-        SwinResult("swin_small_pretrained", True, True, None, None, None, None, None, None, "template row"),
-        SwinResult("swin_scratch", False, False, None, None, None, None, None, None, "template row"),
-    ]
-    summary_path = RESULTS_DIR / "problem2_summary.csv"
-    with summary_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(asdict(rows[0]).keys()))
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(asdict(row))
-
-    history_path = RESULTS_DIR / "problem2_history.csv"
-    with history_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(["model_name", "epoch", "train_loss", "val_loss", "train_accuracy_pct", "val_accuracy_pct", "epoch_seconds"])
-
-
 def get_loaders(batch_size: int, image_size: int = 224, num_workers: int = 0) -> tuple[DataLoader, DataLoader]:
     train_transform = transforms.Compose([
         transforms.Resize((image_size, image_size)),
@@ -265,7 +245,6 @@ def build_scratch_model() -> nn.Module:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Homework 5 Problem 2: Swin models")
-    parser.add_argument("--export-templates", action="store_true")
     parser.add_argument("--run-pretrained", type=str, default=None, help="swin_tiny_pretrained or swin_small_pretrained")
     parser.add_argument("--run-scratch", action="store_true")
     parser.add_argument("--epochs", type=int, default=None)
@@ -340,10 +319,6 @@ def main() -> None:
         torch.set_num_threads(min(8, os.cpu_count() or 2))
     set_seed()
     ensure_dirs()
-    if args.export_templates:
-        export_default_templates()
-        print(f"Exported CSV templates to {RESULTS_DIR}")
-        return
     if args.reset_history:
         maybe_reset_history()
 

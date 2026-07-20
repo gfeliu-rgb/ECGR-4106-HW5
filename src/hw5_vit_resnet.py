@@ -252,7 +252,8 @@ def train_model(model: nn.Module, config: ExperimentConfig, train_loader: DataLo
 
 def estimate_flops(config: ExperimentConfig) -> float | None:
     if config.model_name == "resnet18":
-        return 1.1e9
+        # CIFAR-adapted ResNet-18: 3x3 stride-1 stem and no initial max pool.
+        return 555_468_800.0
     if config.patch_size is None or config.embed_dim is None or config.depth is None or config.heads is None or config.mlp_dim is None:
         return None
     tokens = (IMAGE_SIZE // config.patch_size) ** 2 + 1
@@ -284,22 +285,6 @@ def write_summary(rows: list[ExperimentResult]) -> None:
             writer.writerow(asdict(row))
 
 
-def export_default_templates() -> None:
-    ensure_dirs()
-    summary_rows = [
-        ExperimentResult("vit_patch4_dim256_d4_h4", 4, 256, 4, 4, 1024, None, None, None, None, None, None, "template row"),
-        ExperimentResult("vit_patch4_dim512_d8_h8", 4, 512, 8, 8, 2048, None, None, None, None, None, None, "template row"),
-        ExperimentResult("vit_patch8_dim256_d4_h4", 8, 256, 4, 4, 1024, None, None, None, None, None, None, "template row"),
-        ExperimentResult("vit_patch8_dim512_d8_h8", 8, 512, 8, 8, 2048, None, None, None, None, None, None, "template row"),
-        ExperimentResult("resnet18", None, None, None, None, None, None, None, None, None, None, None, "template row"),
-    ]
-    write_summary(summary_rows)
-    history_path = RESULTS_DIR / "problem1_history.csv"
-    with history_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(["model_name", "epoch", "train_loss", "val_loss", "train_accuracy_pct", "val_accuracy_pct", "epoch_seconds"])
-
-
 def default_vit_configs() -> list[ExperimentConfig]:
     return [
         ExperimentConfig("vit_patch4_dim256_d4_h4", 4, 256, 4, 4, 1024, 64, 10, 1e-3),
@@ -321,7 +306,6 @@ def build_vit_from_config(config: ExperimentConfig) -> ViTClassifier:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Homework 5 Problem 1: ViT vs ResNet-18")
-    parser.add_argument("--export-templates", action="store_true")
     parser.add_argument("--run-all-vit", action="store_true")
     parser.add_argument("--run-vit", type=str, default=None, help="Specific ViT config name to run")
     parser.add_argument("--run-resnet", action="store_true")
@@ -403,10 +387,6 @@ def main() -> None:
     args = parse_args()
     set_seed()
     ensure_dirs()
-    if args.export_templates:
-        export_default_templates()
-        print(f"Exported templates to {RESULTS_DIR}")
-        return
     if args.reset_history:
         maybe_reset_history()
 

@@ -28,24 +28,37 @@ def maybe_plot_history(csv_path: Path, output_name: str, title: str) -> None:
     if df.empty or "epoch" not in df.columns:
         return
 
-    plt.figure(figsize=(10, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     for model_name, group in df.groupby("model_name"):
         if "val_loss" in group.columns:
-            plt.plot(group["epoch"], group["val_loss"], label=f"{model_name} val")
+            axes[0].plot(group["epoch"], group["val_loss"], label=f"{model_name} val")
         if "train_loss" in group.columns:
-            plt.plot(group["epoch"], group["train_loss"], linestyle="--", label=f"{model_name} train")
-    plt.title(title)
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(csv_path.parent / output_name, dpi=200)
-    plt.close()
+            axes[0].plot(group["epoch"], group["train_loss"], linestyle="--", label=f"{model_name} train")
+        if "val_accuracy_pct" in group.columns:
+            axes[1].plot(group["epoch"], group["val_accuracy_pct"], label=f"{model_name} val")
+        if "train_accuracy_pct" in group.columns:
+            axes[1].plot(group["epoch"], group["train_accuracy_pct"], linestyle="--", label=f"{model_name} train")
+
+    axes[0].set_title(f"{title}: Loss")
+    axes[0].set_xlabel("Epoch")
+    axes[0].set_ylabel("Loss")
+    axes[0].legend(fontsize=7)
+    axes[0].grid(alpha=0.25)
+
+    axes[1].set_title(f"{title}: Accuracy")
+    axes[1].set_xlabel("Epoch")
+    axes[1].set_ylabel("Accuracy (%)")
+    axes[1].legend(fontsize=7)
+    axes[1].grid(alpha=0.25)
+
+    fig.tight_layout()
+    fig.savefig(csv_path.parent / output_name, dpi=200)
+    plt.close(fig)
 
 
 def main() -> None:
-    maybe_plot_history(P1 / "problem1_history.csv", "problem1_loss_curves.png", "Homework 5 Problem 1 Loss Curves")
-    maybe_plot_history(P2 / "problem2_history.csv", "problem2_training_curves.png", "Homework 5 Problem 2 Loss Curves")
+    maybe_plot_history(P1 / "problem1_history.csv", "problem1_loss_curves.png", "Homework 5 Problem 1 Training Curves")
+    maybe_plot_history(P2 / "problem2_history.csv", "problem2_training_curves.png", "Homework 5 Problem 2 Training Curves")
 
 
 if __name__ == "__main__":

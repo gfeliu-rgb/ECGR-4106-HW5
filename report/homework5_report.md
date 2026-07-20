@@ -16,7 +16,7 @@ Both problems use CIFAR-100 through `torchvision.datasets.CIFAR100`. Training im
 
 The scripts select CUDA when available and otherwise run on CPU. The completed CSV summaries record CUDA for all Problem 1 runs and all Problem 2 runs. The final Problem 2 experiments were run with approved GPU access on an NVIDIA GeForce RTX 4070. Package versions used in the current environment were: `torch 2.12.0+cu130`, `torchvision 0.27.0+cu130`, `transformers 5.14.1`, `pandas 2.2.3`, `numpy 2.2.6`, and `matplotlib 3.10.9`.
 
-Important status note: Problem 1 has 10-epoch results for all planned rows. Problem 2 has 5-epoch results for all planned rows.
+Important status note: Problem 1 has 10-epoch results for all planned rows. Problem 2 has 5-epoch results for all planned rows. Every submitted summary row contains measured result values.
 
 ## Reproducibility and Metric Details
 
@@ -54,6 +54,13 @@ The custom ViT starts with a convolutional patch embedding layer whose kernel si
 
 The ResNet-18 baseline uses `torchvision.models.resnet18(weights=None)`. Its first convolution is changed to a 3 by 3 stride-1 convolution and the initial max-pooling layer is removed so the model is better matched to 32 by 32 CIFAR images. All models use cross-entropy loss and Adam optimization. Evaluation runs without gradients on the CIFAR-100 test split and records validation/test loss and top-1 accuracy.
 
+### Complexity Calculation Details
+
+For each ViT, the number of tokens is `N = (32 / patch_size)^2 + 1`, where the extra token is the class token. Patch embedding parameters are `(patch_size^2 * 3 * embed_dim) + embed_dim`. The learned class token and positional embedding add `embed_dim + N * embed_dim` parameters. Transformer and classifier parameters are counted directly from the PyTorch model.
+
+ViT FLOPs are estimated per forward pass with the transformer approximation
+`FLOPs_layer ~= 4 N d^2 + 2 N^2 d + 2 N d m`, where `d` is embedding dimension and `m` is the MLP hidden dimension. The reported ViT FLOPs multiply that layer cost by the transformer depth and add the classifier head cost `d * 100`. ResNet-18 FLOPs are estimated by summing convolution and linear multiply-adds from the actual CIFAR-adapted network, using the 3 by 3 stride-1 stem and removed max pool.
+
 ### Results Table
 
 | Model | Params | FLOPs / Forward | Train Time / Epoch (s) | Final Val Loss | Test Accuracy (%) | Status |
@@ -62,17 +69,21 @@ The ResNet-18 baseline uses `torchvision.models.resnet18(weights=None)`. Its fir
 | ViT-B | 25,330,276 | 1.67e9 | 106.72 | 4.3232 | 4.51 | 10 epochs, CUDA |
 | ViT-C | 3,239,268 | 5.41e7 | 12.22 | 3.8851 | 9.68 | 10 epochs, CUDA |
 | ViT-D | 25,379,428 | 4.30e8 | 42.30 | 4.2694 | 4.95 | 10 epochs, CUDA |
-| ResNet-18 | 11,220,132 | 1.10e9 | 61.24 | 1.3919 | 61.20 | 10 epochs, CUDA |
+| ResNet-18 | 11,220,132 | 5.55e8 | 61.24 | 1.3919 | 61.20 | 10 epochs, CUDA |
 
 ### Analysis
 
 Among the ViT models, ViT-A performed best with 20.01 percent test accuracy and a final validation loss of 3.2834. ViT-C was the next best ViT at 9.68 percent while using the lowest estimated FLOP count. ViT-B and ViT-D were much larger, about 25.3 million trainable parameters each, but performed poorly in this 10-epoch run. The larger transformer settings appear harder to optimize from scratch on CIFAR-100 under this short schedule.
 
-Patch size affected compute directly. With 32 by 32 inputs, patch size 4 creates 64 image tokens plus the class token, while patch size 8 creates 16 image tokens plus the class token. Since transformer attention scales strongly with sequence length, the patch size 8 configurations had much lower estimated FLOPs and lower runtime. The tradeoff is that the lower-token models also had weaker accuracy in this run.
+Patch size affected compute directly. With 32 by 32 inputs, patch size 4 creates 64 image tokens plus the class token, while patch size 8 creates 16 image tokens plus the class token. Since transformer attention scales strongly with sequence length, the patch size 8 configurations had much lower estimated FLOPs and lower runtime. Comparing ViT-A and ViT-C isolates this effect: both use embedding dimension 256, depth 4, and 4 heads, but the 8 by 8 patch model lowers FLOPs from 2.13e8 to 5.41e7 while accuracy drops from 20.01 percent to 9.68 percent. The larger patch gives faster training but loses fine spatial detail.
 
-The ResNet-18 baseline was strongest overall, reaching 61.20 percent test accuracy after 10 epochs. This result is expected on CIFAR-100 because convolutional inductive bias helps ResNet learn local image features efficiently, while a from-scratch ViT generally needs more data, longer schedules, stronger regularization, or pretraining to become competitive.
+Increasing model capacity did not help under the short from-scratch schedule. ViT-B has the same 4 by 4 patch size as ViT-A but increases embedding dimension, depth, heads, and MLP width; parameters rise from 3.21 million to 25.33 million and FLOPs rise from 2.13e8 to 1.67e9, while accuracy falls from 20.01 percent to 4.51 percent. The same pattern appears between ViT-C and ViT-D. The larger models have enough capacity, but the training curves show they do not optimize well in only 10 epochs with this simple Adam setup.
 
-Exported figure: `Results_Problem_1/problem1_loss_curves.png`.
+The ResNet-18 baseline was strongest overall, reaching 61.20 percent test accuracy after 10 epochs. It used more parameters and FLOPs than ViT-A and ViT-C, but far less compute than the largest ViT-B run and still produced much higher accuracy. This result is expected on CIFAR-100 because convolutional inductive bias helps ResNet learn local image features efficiently, while a from-scratch ViT generally needs more data, longer schedules, stronger regularization, or pretraining to become competitive.
+
+The training-curve figure verifies model behavior beyond final accuracy. ResNet-18 shows steadily decreasing training and test loss, so its accuracy improvement is backed by a real learning curve. ViT-A and ViT-C also show some loss reduction, but the deeper/wider ViT-B and ViT-D curves remain close to high cross-entropy loss and low accuracy, confirming that their poor final results are training behavior rather than a reporting artifact.
+
+Exported figure: `Results_Problem_1/problem1_loss_curves.png` contains per-epoch loss and accuracy curves.
 
 ## Problem 2: Fine-Tuning Pretrained Swin Transformers vs. Training from Scratch
 
@@ -82,9 +93,13 @@ The goal of Problem 2 is to compare pretrained Swin-Tiny and Swin-Small head-onl
 
 ### Implementation Summary
 
-The pretrained Swin models are loaded from Hugging Face using `SwinForImageClassification.from_pretrained`. The classifier head is replaced for 100 CIFAR-100 classes with `ignore_mismatched_sizes=True`. For the pretrained experiments, all backbone parameters are frozen and only classifier parameters remain trainable. The script uses Adam, cross-entropy loss, batch size 32, learning rate `2e-5`, and 224 by 224 resized CIFAR-100 images.
+The pretrained Swin models are loaded from Hugging Face using `SwinForImageClassification.from_pretrained()` with `microsoft/swin-tiny-patch4-window7-224` and `microsoft/swin-small-patch4-window7-224`. The classifier head is replaced for 100 CIFAR-100 classes with `ignore_mismatched_sizes=True`. For the pretrained experiments, all backbone parameters are frozen and only classifier parameters remain trainable. The script uses Adam, cross-entropy loss, batch size 32, learning rate `2e-5`, and 224 by 224 resized CIFAR-100 images.
 
 The scratch model uses `torchvision.models.swin_t(weights=None)` with its head replaced for 100 classes. Unlike the pretrained runs, all scratch-model parameters are trainable. The scratch run uses 224 by 224 resized CIFAR-100 inputs, batch size 32, learning rate `0.001`, and 5 epochs on CUDA.
+
+### Model Size Details
+
+For the frozen pretrained Swin models, total parameters count the full backbone plus classifier. Trainable parameters count only tensors with `requires_grad=True`. The replacement classifier has `768 * 100 + 100 = 76,900` trainable parameters for both Swin-Tiny and Swin-Small. The scratch Swin-Tiny-sized model has the same total parameter count as Swin-Tiny, but all parameters are trainable because it is initialized from scratch.
 
 ### Results Table
 
@@ -98,11 +113,13 @@ The scratch model uses `torchvision.models.swin_t(weights=None)` with its head r
 
 The completed pretrained runs show a clear transfer-learning advantage after five epochs. Swin-Small reached 68.74 percent test accuracy, and Swin-Tiny reached 64.78 percent. These accuracies are much higher than the from-scratch transformer results because the Swin backbones already contain useful image features from pretraining.
 
-Swin-Small performed better than Swin-Tiny in the completed artifacts, with lower validation loss and higher accuracy. The trainable parameter count is the same for both pretrained rows because the backbone is frozen and only the classifier head is trained. The total parameter count is higher for Swin-Small, so it has a larger memory footprint even though the optimizer updates the same 76,900 classifier parameters.
+Swin-Small performed better than Swin-Tiny in the completed artifacts, with lower validation loss and higher accuracy. The trainable parameter count is the same for both pretrained rows because the backbone is frozen and only the classifier head is trained. The total parameter count is higher for Swin-Small, so it has a larger memory footprint and higher time per epoch even though the optimizer updates the same 76,900 classifier parameters.
 
 The scratch Swin baseline stayed near chance accuracy, reaching 1.00 percent after five CUDA epochs. This is well below both pretrained Swin rows even though the scratch model has the same total parameter count as Swin-Tiny and updates all 27.6 million parameters. The result supports the expected advantage of transfer learning: with a short five-epoch schedule, the randomly initialized Swin model did not learn useful CIFAR-100 features. A stronger from-scratch transformer result would likely require a longer schedule, warmup, tuned learning-rate decay, stronger augmentation, and additional regularization.
 
-Exported figure: `Results_Problem_2/problem2_training_curves.png`.
+The Problem 2 training curves show why the final table differs across models. The pretrained Swin losses decrease each epoch and validation accuracy rises into the 60 percent range, which indicates the classifier head is fitting useful frozen features. Scratch Swin remains near cross-entropy loss `ln(100) ~= 4.605` and about 1 percent accuracy, which is chance performance for 100 classes. This confirms that the scratch model did not train meaningfully in the allotted five epochs.
+
+Exported figure: `Results_Problem_2/problem2_training_curves.png` contains per-epoch loss and accuracy curves.
 
 ## Conclusion
 
