@@ -40,6 +40,29 @@ def display_name(model_name: str) -> str:
     return DISPLAY_NAMES.get(str(model_name), str(model_name))
 
 
+def readable_epoch_ticks(epochs: list[int | float]) -> list[int | float]:
+    if len(epochs) <= 20:
+        return epochs
+    first = int(min(epochs))
+    last = int(max(epochs))
+    ticks = [first]
+    ticks.extend(range(((first // 10) + 1) * 10, last + 1, 10))
+    if ticks[-1] != last:
+        ticks.append(last)
+    return ticks
+
+
+def readable_label_epochs(epochs: list[int | float]) -> set[int | float]:
+    if len(epochs) <= 12:
+        return set(epochs)
+    first = int(min(epochs))
+    last = int(max(epochs))
+    labels = {first, last}
+    step = 10 if len(epochs) > 40 else 5
+    labels.update(range(((first // step) + 1) * step, last + 1, step))
+    return labels
+
+
 def maybe_plot_history(csv_path: Path, output_name: str, title: str) -> None:
     if not csv_path.exists():
         return
@@ -49,6 +72,7 @@ def maybe_plot_history(csv_path: Path, output_name: str, title: str) -> None:
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     epochs = sorted(df["epoch"].dropna().unique())
+    epoch_ticks = readable_epoch_ticks(epochs)
     for model_name, group in df.groupby("model_name"):
         if "val_loss" in group.columns:
             axes[0].plot(group["epoch"], group["val_loss"], marker="o", markersize=6, linewidth=1.8, label=f"{model_name} val")
@@ -62,14 +86,14 @@ def maybe_plot_history(csv_path: Path, output_name: str, title: str) -> None:
     axes[0].set_title(f"{title}: Loss")
     axes[0].set_xlabel("Epoch")
     axes[0].set_ylabel("Loss")
-    axes[0].set_xticks(epochs)
+    axes[0].set_xticks(epoch_ticks)
     axes[0].legend(fontsize=7)
     axes[0].grid(alpha=0.25)
 
     axes[1].set_title(f"{title}: Accuracy")
     axes[1].set_xlabel("Epoch")
     axes[1].set_ylabel("Accuracy (%)")
-    axes[1].set_xticks(epochs)
+    axes[1].set_xticks(epoch_ticks)
     axes[1].legend(fontsize=7)
     axes[1].grid(alpha=0.25)
 
@@ -90,6 +114,7 @@ def maybe_plot_epoch_details(csv_path: Path, output_name: str, title: str) -> No
     rows = math.ceil(len(model_names) / cols)
     fig, axes = plt.subplots(rows, cols, figsize=(5.2 * cols, 3.8 * rows), squeeze=False)
     epochs = sorted(df["epoch"].dropna().unique())
+    epoch_ticks = readable_epoch_ticks(epochs)
 
     for ax, model_name in zip(axes.flat, model_names, strict=False):
         group = df[df["model_name"] == model_name].sort_values("epoch")
@@ -124,7 +149,7 @@ def maybe_plot_epoch_details(csv_path: Path, output_name: str, title: str) -> No
         ax.set_title(display_name(model_name).replace("\n", " "))
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Accuracy (%)")
-        ax.set_xticks(epochs)
+        ax.set_xticks(epoch_ticks)
         ax.set_ylim(
             max(0, min(df["train_accuracy_pct"].min(), df["val_accuracy_pct"].min()) - 5),
             min(100, max(df["train_accuracy_pct"].max(), df["val_accuracy_pct"].max()) + 8),
@@ -156,25 +181,27 @@ def maybe_plot_metric_grid(csv_path: Path, output_name: str, title: str) -> None
     ]
     model_names = list(df["model_name"].drop_duplicates())
     epochs = sorted(df["epoch"].dropna().unique())
+    epoch_ticks = readable_epoch_ticks(epochs)
+    label_epochs = readable_label_epochs(epochs)
     fig, axes = plt.subplots(len(model_names), len(metrics), figsize=(4.2 * len(metrics), 2.45 * len(model_names)), squeeze=False)
 
     for row_index, model_name in enumerate(model_names):
         group = df[df["model_name"] == model_name].sort_values("epoch")
         for col_index, (column, label, color) in enumerate(metrics):
             ax = axes[row_index, col_index]
-            dense_epoch = np.linspace(group["epoch"].min(), group["epoch"].max(), 180)
-            dense_values = np.interp(dense_epoch, group["epoch"], group[column])
-            ax.plot(dense_epoch, dense_values, marker="o", markersize=2.0, linewidth=1.25, color=color, alpha=0.7)
+            ax.plot(group["epoch"], group[column], marker="o", markersize=3.0, linewidth=1.25, color=color, alpha=0.72)
             ax.scatter(
                 group["epoch"],
                 group[column],
-                s=34,
+                s=24 if len(epochs) > 40 else 34,
                 color=color,
                 edgecolors="black",
                 linewidths=0.4,
                 zorder=4,
             )
             for _, row in group.iterrows():
+                if row["epoch"] not in label_epochs:
+                    continue
                 value = row[column]
                 text = f"{value:.1f}" if "accuracy" in column else f"{value:.2f}"
                 ax.annotate(text, (row["epoch"], value), textcoords="offset points", xytext=(0, 5), ha="center", fontsize=6)
@@ -183,7 +210,7 @@ def maybe_plot_metric_grid(csv_path: Path, output_name: str, title: str) -> None
             if col_index == 0:
                 ax.set_ylabel(display_name(model_name).replace("\n", " "))
             ax.set_xlabel("Epoch")
-            ax.set_xticks(epochs)
+            ax.set_xticks(epoch_ticks)
             ax.grid(alpha=0.22)
 
     fig.suptitle(title, fontsize=14)
@@ -413,10 +440,10 @@ def main() -> None:
     maybe_plot_metric_grid(P1 / "problem1_history.csv", "problem1_metric_grid.png", "Homework 5 Problem 1: Per-Epoch Metric Grid")
     maybe_plot_metric_grid(P2 / "problem2_history.csv", "problem2_metric_grid.png", "Homework 5 Problem 2: Per-Epoch Metric Grid")
     maybe_plot_history(P2 / "problem2_extended_history.csv", "problem2_extended_training_curves.png", "Homework 5 Problem 2 Extended Cached-Head Runs")
-    maybe_plot_metric_grid(P2 / "problem2_extended_history.csv", "problem2_extended_metric_grid.png", "Homework 5 Problem 2: Extended 30-Epoch Metric Grid")
+    maybe_plot_metric_grid(P2 / "problem2_extended_history.csv", "problem2_extended_metric_grid.png", "Homework 5 Problem 2: Extended 100-Epoch Metric Grid")
     maybe_plot_interpolated_trends(P1 / "problem1_history.csv", "problem1_interpolated_trends.png", "Homework 5 Problem 1: Reference-Style Trend Curves")
     maybe_plot_interpolated_trends(P2 / "problem2_history.csv", "problem2_interpolated_trends.png", "Homework 5 Problem 2: Reference-Style Trend Curves")
-    maybe_plot_interpolated_trends(P2 / "problem2_extended_history.csv", "problem2_extended_interpolated_trends.png", "Homework 5 Problem 2: Extended 30-Epoch Trend Curves")
+    maybe_plot_interpolated_trends(P2 / "problem2_extended_history.csv", "problem2_extended_interpolated_trends.png", "Homework 5 Problem 2: Extended 100-Epoch Trend Curves")
     plot_problem1_tradeoffs()
     plot_problem2_tradeoffs()
 

@@ -35,4 +35,4 @@ python tools/make_hw5_plots.py
 - Both Jupyter notebooks are executed in place with full source-code sections split into step-by-step output blocks, visible tables, solid-line training-curve figures, tradeoff figures, and markdown interpretation.
 - Problem 1 includes completed 10-epoch results for all planned models.
 - Problem 2 includes completed 5-epoch CUDA results for pretrained Swin-Tiny, pretrained Swin-Small, and scratch Swin.
-- Problem 2 also includes a clearly labeled extended cached-head analysis with 30 real measured epochs for pretrained Swin-Tiny and Swin-Small on a balanced CIFAR-100 subset.
+- Problem 2 also includes a clearly labeled extended cached-head analysis with 100 real measured epochs for pretrained Swin-Tiny and Swin-Small on a balanced CIFAR-100 subset.

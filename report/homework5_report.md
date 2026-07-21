@@ -119,13 +119,13 @@ The scratch Swin baseline stayed near chance accuracy, reaching 1.00 percent aft
 
 The Problem 2 training curves show why the final table differs across models. The pretrained Swin losses decrease each epoch and validation accuracy rises into the 60 percent range, which indicates the classifier head is fitting useful frozen features. Scratch Swin remains near cross-entropy loss `ln(100) ~= 4.605` and about 1 percent accuracy, which is chance performance for 100 classes. This confirms that the scratch model did not train meaningfully in the allotted five epochs.
 
-### Extended 30-Epoch Cached-Head Analysis
+### Extended 100-Epoch Cached-Head Analysis
 
-Because the required Problem 2 schedule uses only five epochs, I also ran an additional cached-feature analysis to provide more real measured training points for the frozen pretrained Swin heads. This extended run is not used to replace the required five-epoch table above. Instead, it is reported as a separate diagnostic: the frozen Swin backbone features were cached once for a balanced CIFAR-100 subset of 10,000 training images and 2,000 test images, then only the 100-class classifier head was trained for 30 epochs on CPU.
+Because the required Problem 2 schedule uses only five epochs, I also ran an additional cached-feature analysis to provide more real measured training points for the frozen pretrained Swin heads. This extended run is not used to replace the required five-epoch table above. Instead, it is reported as a separate diagnostic: the frozen Swin backbone features were cached once for a balanced CIFAR-100 subset of 10,000 training images and 2,000 test images, then only the 100-class classifier head was trained for 100 epochs on CPU.
 
-This extended analysis produced 30 real epoch points for Swin-Tiny and 30 real epoch points for Swin-Small. Swin-Tiny ended at 71.75 percent test accuracy on the balanced subset, and Swin-Small ended at 74.25 percent. The curves show rapid early improvement followed by a plateau, which supports the main conclusion that pretrained Swin features are strong and that most of the short-run gain comes from learning the classifier head.
+This extended analysis produced 100 real epoch points for Swin-Tiny and 100 real epoch points for Swin-Small. Swin-Tiny ended at 70.95 percent test accuracy on the balanced subset, and Swin-Small ended at 73.40 percent. The curves show rapid early improvement, a broad plateau, and mild late overfitting: training loss keeps falling toward zero while test accuracy stops improving consistently. This supports the main conclusion that pretrained Swin features are strong, but that after the classifier head has learned the easy transfer signal, longer head-only training gives limited additional test improvement.
 
-Exported figures: `Results_Problem_2/problem2_training_curves.png` contains per-epoch loss and accuracy curves, `Results_Problem_2/problem2_extended_training_curves.png` contains the extended 30-epoch cached-head curves, and `Results_Problem_2/problem2_tradeoffs.png` summarizes final accuracy, runtime, total parameters, trainable parameters, and fine-tuning tradeoffs.
+Exported figures: `Results_Problem_2/problem2_training_curves.png` contains per-epoch loss and accuracy curves, `Results_Problem_2/problem2_extended_training_curves.png` contains the extended 100-epoch cached-head curves, and `Results_Problem_2/problem2_tradeoffs.png` summarizes final accuracy, runtime, total parameters, trainable parameters, and fine-tuning tradeoffs.
 
 ## Conclusion
 
