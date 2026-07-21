@@ -160,8 +160,18 @@ def maybe_plot_metric_grid(csv_path: Path, output_name: str, title: str) -> None
         group = df[df["model_name"] == model_name].sort_values("epoch")
         for col_index, (column, label, color) in enumerate(metrics):
             ax = axes[row_index, col_index]
-            ax.plot(group["epoch"], group[column], marker="o", markersize=4.8, linewidth=1.7, color=color)
-            ax.scatter(group["epoch"], group[column], s=24, color=color, zorder=3)
+            dense_epoch = np.linspace(group["epoch"].min(), group["epoch"].max(), 180)
+            dense_values = np.interp(dense_epoch, group["epoch"], group[column])
+            ax.plot(dense_epoch, dense_values, marker="o", markersize=2.0, linewidth=1.25, color=color, alpha=0.7)
+            ax.scatter(
+                group["epoch"],
+                group[column],
+                s=34,
+                color=color,
+                edgecolors="black",
+                linewidths=0.4,
+                zorder=4,
+            )
             for _, row in group.iterrows():
                 value = row[column]
                 text = f"{value:.1f}" if "accuracy" in column else f"{value:.2f}"
