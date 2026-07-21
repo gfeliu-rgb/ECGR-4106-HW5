@@ -6,10 +6,6 @@
 **Assignment:** Homework 5<br>
 **GitHub Repository:** <https://github.com/gfeliu-rgb/ECGR-4106-HW5>
 
-## Late Submission Note
-
-This homework was submitted late because I had a family medical emergency. My grandmother has pancreatic cancer and was hospitalized during the week of the deadline, which disrupted the time I had planned for completing and packaging the assignment.
-
 ## Dataset and Experimental Setup
 
 Both problems use CIFAR-100 through `torchvision.datasets.CIFAR100`. Training images are normalized with CIFAR-100 channel statistics. Problem 1 uses 32 by 32 inputs with random crop, padding, and horizontal flip for training; evaluation uses only tensor conversion and normalization. Problem 2 uses 224 by 224 resized inputs for Swin-Tiny, Swin-Small, and the scratch Swin baseline.
