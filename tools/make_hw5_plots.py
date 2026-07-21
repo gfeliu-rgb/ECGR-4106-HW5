@@ -138,6 +138,47 @@ def maybe_plot_epoch_details(csv_path: Path, output_name: str, title: str) -> No
     plt.close(fig)
 
 
+def maybe_plot_metric_grid(csv_path: Path, output_name: str, title: str) -> None:
+    if not csv_path.exists():
+        return
+    df = pd.read_csv(csv_path)
+    if df.empty or "epoch" not in df.columns:
+        return
+
+    metrics = [
+        ("train_loss", "Train Loss", "#f58518"),
+        ("val_loss", "Test Loss", "#4c78a8"),
+        ("train_accuracy_pct", "Train Accuracy (%)", "#e45756"),
+        ("val_accuracy_pct", "Test Accuracy (%)", "#54a24b"),
+    ]
+    model_names = list(df["model_name"].drop_duplicates())
+    epochs = sorted(df["epoch"].dropna().unique())
+    fig, axes = plt.subplots(len(model_names), len(metrics), figsize=(4.2 * len(metrics), 2.45 * len(model_names)), squeeze=False)
+
+    for row_index, model_name in enumerate(model_names):
+        group = df[df["model_name"] == model_name].sort_values("epoch")
+        for col_index, (column, label, color) in enumerate(metrics):
+            ax = axes[row_index, col_index]
+            ax.plot(group["epoch"], group[column], marker="o", markersize=4.8, linewidth=1.7, color=color)
+            ax.scatter(group["epoch"], group[column], s=24, color=color, zorder=3)
+            for _, row in group.iterrows():
+                value = row[column]
+                text = f"{value:.1f}" if "accuracy" in column else f"{value:.2f}"
+                ax.annotate(text, (row["epoch"], value), textcoords="offset points", xytext=(0, 5), ha="center", fontsize=6)
+            if row_index == 0:
+                ax.set_title(label)
+            if col_index == 0:
+                ax.set_ylabel(display_name(model_name).replace("\n", " "))
+            ax.set_xlabel("Epoch")
+            ax.set_xticks(epochs)
+            ax.grid(alpha=0.22)
+
+    fig.suptitle(title, fontsize=14)
+    fig.tight_layout()
+    fig.savefig(csv_path.parent / output_name, dpi=200)
+    plt.close(fig)
+
+
 def annotate_points(
     ax: plt.Axes,
     model_names: pd.Series,
@@ -311,6 +352,8 @@ def main() -> None:
     maybe_plot_history(P2 / "problem2_history.csv", "problem2_training_curves.png", "Homework 5 Problem 2 Training Curves")
     maybe_plot_epoch_details(P1 / "problem1_history.csv", "problem1_epoch_detail.png", "Homework 5 Problem 1: Per-Model Accuracy Points")
     maybe_plot_epoch_details(P2 / "problem2_history.csv", "problem2_epoch_detail.png", "Homework 5 Problem 2: Per-Model Accuracy Points")
+    maybe_plot_metric_grid(P1 / "problem1_history.csv", "problem1_metric_grid.png", "Homework 5 Problem 1: Per-Epoch Metric Grid")
+    maybe_plot_metric_grid(P2 / "problem2_history.csv", "problem2_metric_grid.png", "Homework 5 Problem 2: Per-Epoch Metric Grid")
     plot_problem1_tradeoffs()
     plot_problem2_tradeoffs()
 
