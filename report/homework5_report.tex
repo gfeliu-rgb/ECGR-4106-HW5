@@ -27,6 +27,40 @@ The scripts select CUDA when available and otherwise run on CPU. The completed C
 
 Important status note: Problem 1 has 10-epoch results for all planned rows. Problem 2 has 5-epoch results for all planned rows. Every submitted summary row contains measured result values.
 
+\section*{Grader Checklist and Artifact Map}
+\begin{center}
+\scriptsize
+\begin{tabular}{|p{2.45in}|p{3.7in}|}
+\hline
+Requirement & Where it is shown \\
+\hline
+Full name, student ID, course, and assignment number & First page header of this report \\
+\hline
+Public GitHub repository & First page repository link and repository README \\
+\hline
+CIFAR-100 loaded with torchvision & Dataset section and both source scripts \\
+\hline
+Problem 1 ViT from scratch and ResNet-18 baseline & Problem 1 implementation summary, results table, and notebook \\
+\hline
+Problem 1 four ViT configurations & Problem 1 configuration table and Problem 1 summary CSV \\
+\hline
+Problem 1 parameters, FLOPs, runtime, and accuracy & Problem 1 results table, complexity section, and tradeoff figure \\
+\hline
+Problem 1 training behavior verification & Problem 1 training-curve figure and analysis paragraph \\
+\hline
+Problem 2 pretrained Swin-Tiny, Swin-Small, and scratch Swin & Problem 2 results table and \texttt{src/hw5\_swin.py} \\
+\hline
+Problem 2 model size and trainable parameter comparison & Problem 2 model-size section and tradeoff figure \\
+\hline
+Problem 2 training curves and discussion & Problem 2 training-curve figure and analysis paragraph \\
+\hline
+CPU fallback and executed notebooks & Device-selection code in both scripts; executed notebooks with visible outputs \\
+\hline
+\end{tabular}
+\end{center}
+
+The repository also includes the CSV files used to generate every table and plot. This is intended to make the final numbers traceable rather than only stated in the report.
+
 \section*{Reproducibility and Metric Details}
 CIFAR-100 contains 50,000 training images and 10,000 test images across 100 classes. The scripts train on the official training split and evaluate on the official test split. The CSV column names use \texttt{val\_loss} and \texttt{val\_accuracy\_pct}, but these values are computed on the CIFAR-100 test split because no separate validation split was created for this homework. Randomness is controlled with seed \texttt{4106} for Python and PyTorch.
 
@@ -176,5 +210,8 @@ The next plot summarizes the final Problem 2 tradeoffs by comparing accuracy, av
 
 \section*{Conclusion}
 The results support two main takeaways. First, ResNet-18 substantially outperformed all from-scratch ViT configurations after 10 epochs on CIFAR-100, and ViT-A was the best transformer configuration among the four tested. Second, pretrained Swin feature extractors were much stronger than scratch Swin under the same five-epoch Problem 2 schedule, showing the practical value of transfer learning when compute and training time are limited.
+
+\section*{Assumptions and Limitations}
+The main experiments follow the epoch counts and hyperparameters stated in the assignment. The extended 100-epoch cached-head run is included only as extra diagnostic evidence for training trends; it is not used to replace the required Problem 2 five-epoch comparison. The reported validation columns are measured on the official CIFAR-100 test split, because the assignment asks for final test accuracy and no separate validation split was required. The from-scratch transformer results are limited by the short training schedule, which is why the discussion emphasizes optimization behavior instead of presenting the low ViT/Swin scratch accuracies as architecture limits.
 
 \end{document}

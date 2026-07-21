@@ -18,6 +18,20 @@ Repository link for the report: <https://github.com/gfeliu-rgb/ECGR-4106-HW5>
 - `report/homework5_report.pdf`: completed PDF report for Canvas submission.
 - `SUBMISSION_CHECKLIST.md`: final packaging checklist before Canvas submission.
 
+## Grader Quick Map
+
+| TA item | File or folder |
+|---|---|
+| PDF report | `report/homework5_report.pdf` |
+| Problem 1 code | `src/hw5_vit_resnet.py` |
+| Problem 2 code | `src/hw5_swin.py` |
+| Problem 1 executed notebook | `Homework5_Problem1_ViT_vs_ResNet18.ipynb` |
+| Problem 2 executed notebook | `Homework5_Problem2_Swin_Finetuning.ipynb` |
+| Problem 1 metrics and plots | `Results_Problem_1/` |
+| Problem 2 metrics and plots | `Results_Problem_2/` |
+| Extra 100-epoch trend evidence | `Results_Problem_2/problem2_extended_history.csv` and extended plot PNGs |
+| Final submission checklist | `SUBMISSION_CHECKLIST.md` |
+
 ## Reproduce Final Artifacts
 
 ```bash

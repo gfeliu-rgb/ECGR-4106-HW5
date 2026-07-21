@@ -17,6 +17,8 @@ Before submitting on Canvas, verify every item below.
 - The report includes parameter counts, FLOPs, training time, and test accuracy for Problem 1.
 - The report includes training time, parameter counts, and test accuracy for Problem 2.
 - The report includes discussion of tradeoffs, not only tables and screenshots.
+- The report includes a grader checklist / artifact map so the TA can quickly locate each requirement.
+- The report clearly states assumptions and limitations, including that the extended 100-epoch cached-head run is extra diagnostic evidence rather than a replacement for the required 5-epoch Problem 2 run.
 - All figures referenced in the report are present in the repository.
 - The code supports a CPU fallback even if the main runs used a GPU.
 - Open the GitHub link in a private/incognito browser window and confirm it is publicly accessible.
