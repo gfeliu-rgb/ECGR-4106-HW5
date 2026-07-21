@@ -10,6 +10,7 @@ Expected inputs:
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -69,6 +70,69 @@ def maybe_plot_history(csv_path: Path, output_name: str, title: str) -> None:
     axes[1].legend(fontsize=7)
     axes[1].grid(alpha=0.25)
 
+    fig.tight_layout()
+    fig.savefig(csv_path.parent / output_name, dpi=200)
+    plt.close(fig)
+
+
+def maybe_plot_epoch_details(csv_path: Path, output_name: str, title: str) -> None:
+    if not csv_path.exists():
+        return
+    df = pd.read_csv(csv_path)
+    if df.empty or "epoch" not in df.columns:
+        return
+
+    model_names = list(df["model_name"].drop_duplicates())
+    cols = min(3, len(model_names))
+    rows = math.ceil(len(model_names) / cols)
+    fig, axes = plt.subplots(rows, cols, figsize=(5.2 * cols, 3.8 * rows), squeeze=False)
+    epochs = sorted(df["epoch"].dropna().unique())
+
+    for ax, model_name in zip(axes.flat, model_names, strict=False):
+        group = df[df["model_name"] == model_name].sort_values("epoch")
+        ax.plot(
+            group["epoch"],
+            group["train_accuracy_pct"],
+            marker="x",
+            markersize=7,
+            linewidth=2.0,
+            label="train accuracy",
+            color="#f58518",
+        )
+        ax.plot(
+            group["epoch"],
+            group["val_accuracy_pct"],
+            marker="o",
+            markersize=7,
+            linewidth=2.0,
+            label="test accuracy",
+            color="#4c78a8",
+        )
+        for _, row in group.iterrows():
+            ax.annotate(
+                f"{row['val_accuracy_pct']:.1f}",
+                (row["epoch"], row["val_accuracy_pct"]),
+                textcoords="offset points",
+                xytext=(0, 7),
+                ha="center",
+                fontsize=7,
+                color="#4c78a8",
+            )
+        ax.set_title(display_name(model_name).replace("\n", " "))
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Accuracy (%)")
+        ax.set_xticks(epochs)
+        ax.set_ylim(
+            max(0, min(df["train_accuracy_pct"].min(), df["val_accuracy_pct"].min()) - 5),
+            min(100, max(df["train_accuracy_pct"].max(), df["val_accuracy_pct"].max()) + 8),
+        )
+        ax.grid(alpha=0.25)
+        ax.legend(fontsize=8)
+
+    for ax in axes.flat[len(model_names):]:
+        ax.axis("off")
+
+    fig.suptitle(title, fontsize=14)
     fig.tight_layout()
     fig.savefig(csv_path.parent / output_name, dpi=200)
     plt.close(fig)
@@ -245,6 +309,8 @@ def plot_problem2_tradeoffs() -> None:
 def main() -> None:
     maybe_plot_history(P1 / "problem1_history.csv", "problem1_loss_curves.png", "Homework 5 Problem 1 Training Curves")
     maybe_plot_history(P2 / "problem2_history.csv", "problem2_training_curves.png", "Homework 5 Problem 2 Training Curves")
+    maybe_plot_epoch_details(P1 / "problem1_history.csv", "problem1_epoch_detail.png", "Homework 5 Problem 1: Per-Model Accuracy Points")
+    maybe_plot_epoch_details(P2 / "problem2_history.csv", "problem2_epoch_detail.png", "Homework 5 Problem 2: Per-Model Accuracy Points")
     plot_problem1_tradeoffs()
     plot_problem2_tradeoffs()
 
