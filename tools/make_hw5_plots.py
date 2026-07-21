@@ -44,25 +44,28 @@ def maybe_plot_history(csv_path: Path, output_name: str, title: str) -> None:
         return
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    epochs = sorted(df["epoch"].dropna().unique())
     for model_name, group in df.groupby("model_name"):
         if "val_loss" in group.columns:
-            axes[0].plot(group["epoch"], group["val_loss"], marker="o", label=f"{model_name} val")
+            axes[0].plot(group["epoch"], group["val_loss"], marker="o", markersize=6, linewidth=1.8, label=f"{model_name} val")
         if "train_loss" in group.columns:
-            axes[0].plot(group["epoch"], group["train_loss"], marker="x", alpha=0.72, label=f"{model_name} train")
+            axes[0].plot(group["epoch"], group["train_loss"], marker="x", markersize=6, linewidth=1.8, alpha=0.72, label=f"{model_name} train")
         if "val_accuracy_pct" in group.columns:
-            axes[1].plot(group["epoch"], group["val_accuracy_pct"], marker="o", label=f"{model_name} val")
+            axes[1].plot(group["epoch"], group["val_accuracy_pct"], marker="o", markersize=6, linewidth=1.8, label=f"{model_name} val")
         if "train_accuracy_pct" in group.columns:
-            axes[1].plot(group["epoch"], group["train_accuracy_pct"], marker="x", alpha=0.72, label=f"{model_name} train")
+            axes[1].plot(group["epoch"], group["train_accuracy_pct"], marker="x", markersize=6, linewidth=1.8, alpha=0.72, label=f"{model_name} train")
 
     axes[0].set_title(f"{title}: Loss")
     axes[0].set_xlabel("Epoch")
     axes[0].set_ylabel("Loss")
+    axes[0].set_xticks(epochs)
     axes[0].legend(fontsize=7)
     axes[0].grid(alpha=0.25)
 
     axes[1].set_title(f"{title}: Accuracy")
     axes[1].set_xlabel("Epoch")
     axes[1].set_ylabel("Accuracy (%)")
+    axes[1].set_xticks(epochs)
     axes[1].legend(fontsize=7)
     axes[1].grid(alpha=0.25)
 

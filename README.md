@@ -31,6 +31,6 @@ python tools/make_hw5_plots.py
 
 - The structure is aligned with the course `Homework_5` repository layout.
 - This repository contains the completed Homework 5 source, notebooks, result CSVs, generated plots, and PDF report.
-- Both Jupyter notebooks are executed in place with full source-code sections, visible tables, solid-line training-curve figures, tradeoff figures, and markdown interpretation.
+- Both Jupyter notebooks are executed in place with full source-code sections split into step-by-step output blocks, visible tables, solid-line training-curve figures, tradeoff figures, and markdown interpretation.
 - Problem 1 includes completed 10-epoch results for all planned models.
 - Problem 2 includes completed 5-epoch CUDA results for pretrained Swin-Tiny, pretrained Swin-Small, and scratch Swin.
