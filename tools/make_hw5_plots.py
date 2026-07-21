@@ -14,6 +14,7 @@ import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 
@@ -174,6 +175,51 @@ def maybe_plot_metric_grid(csv_path: Path, output_name: str, title: str) -> None
             ax.grid(alpha=0.22)
 
     fig.suptitle(title, fontsize=14)
+    fig.tight_layout()
+    fig.savefig(csv_path.parent / output_name, dpi=200)
+    plt.close(fig)
+
+
+def maybe_plot_interpolated_trends(csv_path: Path, output_name: str, title: str) -> None:
+    if not csv_path.exists():
+        return
+    df = pd.read_csv(csv_path)
+    if df.empty or "epoch" not in df.columns:
+        return
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.2))
+    for model_name, group in df.groupby("model_name"):
+        group = group.sort_values("epoch")
+        dense_epoch = np.linspace(group["epoch"].min(), group["epoch"].max(), 120)
+        train_loss = np.interp(dense_epoch, group["epoch"], group["train_loss"])
+        test_loss = np.interp(dense_epoch, group["epoch"], group["val_loss"])
+        train_acc = np.interp(dense_epoch, group["epoch"], group["train_accuracy_pct"])
+        test_acc = np.interp(dense_epoch, group["epoch"], group["val_accuracy_pct"])
+
+        label = display_name(model_name).replace("\n", " ")
+        axes[0].plot(dense_epoch, train_loss, marker=".", markersize=2.2, linewidth=1.8, alpha=0.78, label=f"{label} train")
+        axes[0].plot(dense_epoch, test_loss, marker=".", markersize=2.2, linewidth=1.8, alpha=0.78, label=f"{label} test")
+        axes[0].scatter(group["epoch"], group["train_loss"], s=34, alpha=0.95, edgecolors="black", linewidths=0.35)
+        axes[0].scatter(group["epoch"], group["val_loss"], s=34, alpha=0.95, edgecolors="black", linewidths=0.35)
+
+        axes[1].plot(dense_epoch, train_acc, marker=".", markersize=2.2, linewidth=1.8, alpha=0.78, label=f"{label} train")
+        axes[1].plot(dense_epoch, test_acc, marker=".", markersize=2.2, linewidth=1.8, alpha=0.78, label=f"{label} test")
+        axes[1].scatter(group["epoch"], group["train_accuracy_pct"], s=34, alpha=0.95, edgecolors="black", linewidths=0.35)
+        axes[1].scatter(group["epoch"], group["val_accuracy_pct"], s=34, alpha=0.95, edgecolors="black", linewidths=0.35)
+
+    axes[0].set_title("Loss Trends")
+    axes[0].set_xlabel("Epoch")
+    axes[0].set_ylabel("Loss")
+    axes[0].grid(alpha=0.25)
+    axes[0].legend(fontsize=7)
+
+    axes[1].set_title("Accuracy Trends")
+    axes[1].set_xlabel("Epoch")
+    axes[1].set_ylabel("Accuracy (%)")
+    axes[1].grid(alpha=0.25)
+    axes[1].legend(fontsize=7)
+
+    fig.suptitle(f"{title}\nDense lines interpolate between measured epoch markers", fontsize=13)
     fig.tight_layout()
     fig.savefig(csv_path.parent / output_name, dpi=200)
     plt.close(fig)
@@ -354,6 +400,8 @@ def main() -> None:
     maybe_plot_epoch_details(P2 / "problem2_history.csv", "problem2_epoch_detail.png", "Homework 5 Problem 2: Per-Model Accuracy Points")
     maybe_plot_metric_grid(P1 / "problem1_history.csv", "problem1_metric_grid.png", "Homework 5 Problem 1: Per-Epoch Metric Grid")
     maybe_plot_metric_grid(P2 / "problem2_history.csv", "problem2_metric_grid.png", "Homework 5 Problem 2: Per-Epoch Metric Grid")
+    maybe_plot_interpolated_trends(P1 / "problem1_history.csv", "problem1_interpolated_trends.png", "Homework 5 Problem 1: Reference-Style Trend Curves")
+    maybe_plot_interpolated_trends(P2 / "problem2_history.csv", "problem2_interpolated_trends.png", "Homework 5 Problem 2: Reference-Style Trend Curves")
     plot_problem1_tradeoffs()
     plot_problem2_tradeoffs()
 
