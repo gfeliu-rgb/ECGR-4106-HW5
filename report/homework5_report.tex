@@ -72,6 +72,13 @@ python src/hw5_swin.py --run-scratch --epochs 5 --batch-size 32 \
 python tools/make_hw5_plots.py
 \end{verbatim}
 
+\subsection*{Experimental Protocol Details}
+The experiments were organized to make each comparison fair within the limits of the assignment. In Problem 1, every ViT configuration and the ResNet-18 baseline uses CIFAR-100, batch size 64, 10 epochs, Adam, and learning rate 0.001. This keeps the optimizer and schedule fixed so the main variables are architecture family, patch size, embedding dimension, depth, and attention-head count. I did not tune a separate learning rate for each architecture because that would make the comparison less direct.
+
+In Problem 2, the pretrained Swin experiments follow the assigned transfer-learning setup: resize CIFAR-100 images to 224 by 224, replace the classifier head for 100 classes, freeze the backbone, and train only the head. The scratch Swin run uses the same 224 by 224 preprocessing so the comparison is not confounded by input resolution. The pretrained runs use the lower learning rate \texttt{2e-5}, while the scratch run uses \texttt{0.001}, matching the assignment instructions.
+
+I treated the curves as a required part of the evaluation, not just a visual add-on. A final accuracy number can hide whether the model was learning steadily, saturating, overfitting, or staying at chance. For that reason, the report includes loss curves, accuracy curves, final tradeoff plots, and CSV history files so the grader can inspect the full training behavior behind each summary number.
+
 \section*{Problem 1: Vision Transformer from Scratch vs. ResNet-18}
 \subsection*{Objective}
 The goal of Problem 1 is to compare several Vision Transformer configurations against a ResNet-18 baseline on CIFAR-100 and discuss accuracy, parameter count, estimated FLOPs, and training time.
@@ -138,6 +145,17 @@ The ResNet-18 baseline was strongest overall, reaching 61.20\% test accuracy aft
 
 The training-curve figure verifies model behavior beyond final accuracy. ResNet-18 shows steadily decreasing training and test loss, so its accuracy improvement is backed by a real learning curve. ViT-A and ViT-C also show some loss reduction, but the deeper/wider ViT-B and ViT-D curves remain close to high cross-entropy loss and low accuracy, confirming that their poor final results are training behavior rather than a reporting artifact.
 
+\subsection*{Problem 1 Detailed Discussion}
+The Problem 1 results show three separate effects: architecture bias, tokenization, and optimization difficulty. The architecture-bias effect is seen most clearly in the ResNet-18 row. ResNet-18 is not the smallest model and is not the cheapest model, but it is the most accurate by a large margin. Its convolution layers scan local neighborhoods repeatedly, which is a strong match for 32 by 32 natural images. CIFAR-100 objects are small, so preserving local edges, textures, and shape fragments early in the network is important.
+
+The tokenization effect appears in the patch-size comparison. A 4 by 4 patch splits each 32 by 32 image into 64 image tokens, while an 8 by 8 patch creates only 16 image tokens. The 8 by 8 patch configurations therefore reduce self-attention cost, but they also compress more pixels into each token before the transformer has a chance to model fine detail. In these results, the compute savings are real, but the accuracy loss is also clear. ViT-C is faster and cheaper than ViT-A, but its final accuracy is lower.
+
+The optimization difficulty appears in the larger ViT configurations. ViT-B and ViT-D have much higher capacity than ViT-A and ViT-C, yet they perform worse under the 10-epoch schedule. This does not mean large ViTs are inherently worse; it means the larger scratch transformer models did not reach a useful solution under this training budget. A larger model can be harder to optimize when trained from scratch, especially without a warmup schedule, cosine decay, label smoothing, stronger augmentation, or pretraining.
+
+The ResNet comparison is important because it prevents the conclusion from being only ``larger is better'' or ``more FLOPs are better.'' ResNet-18 has fewer parameters than the large ViTs and far better accuracy. This shows that model structure matters as much as raw parameter count. For this dataset and training budget, the convolutional inductive bias is more useful than giving a scratch transformer additional depth and width.
+
+A practical conclusion from Problem 1 is that ViT-A is the best transformer compromise among the tested configurations. It is not competitive with ResNet-18, but it is the only ViT run that learns a meaningfully non-chance classifier within 10 epochs. ViT-C is cheaper but loses too much accuracy, while ViT-B and ViT-D are expensive without delivering useful performance. If I were continuing this experiment, I would keep ViT-A as the baseline and then test learning-rate warmup, dropout, weight decay, and longer training.
+
 The plot below shows the per-epoch loss and accuracy curves for each Problem 1 run.
 \begin{center}
 \includegraphics[width=0.9\linewidth]{../Results_Problem_1/problem1_loss_curves.png}
@@ -185,6 +203,17 @@ The scratch Swin baseline stayed near chance accuracy, reaching 1.00\% after fiv
 
 The Problem 2 training curves show why the final table differs across models. The pretrained Swin losses decrease each epoch and validation accuracy rises into the 60\% range, which indicates the classifier head is fitting useful frozen features. Scratch Swin remains near cross-entropy loss $\ln(100) \approx 4.605$ and about 1\% accuracy, which is chance performance for 100 classes. This confirms that the scratch model did not train meaningfully in the allotted five epochs.
 
+\subsection*{Problem 2 Detailed Discussion}
+The pretrained Swin results are the strongest evidence in the assignment for the value of transfer learning. In the pretrained rows, almost all of the model is frozen. The optimizer updates only the classifier head, which has 76,900 trainable parameters. Despite this small trainable parameter count, Swin-Tiny reaches 64.78\% and Swin-Small reaches 68.74\% test accuracy after only five epochs. This indicates that the ImageNet-pretrained Swin backbone already contains general-purpose visual features that transfer well to CIFAR-100.
+
+The Swin-Small and Swin-Tiny comparison separates trainable parameters from representational capacity. Both pretrained runs train the same size classifier head, but Swin-Small has a larger frozen backbone. Since Swin-Small is more accurate, the improvement is not coming from training more head parameters. It is coming from a stronger pretrained representation. The tradeoff is runtime and memory: Swin-Small takes longer per epoch because the larger frozen backbone still has to run forward passes even though its weights are not updated.
+
+The scratch Swin run is useful because it shows what happens when the same type of transformer does not have pretrained features. Scratch Swin has 27.6 million trainable parameters, far more trainable parameters than either pretrained row, but it stays near chance accuracy. This is a strong result, not a weak one, because it cleanly demonstrates that trainable parameter count alone is not enough. Under a short schedule, optimization and representation quality dominate.
+
+The loss values support the same interpretation as the accuracies. Chance-level classification on 100 classes corresponds to cross-entropy near $\ln(100)$, or about 4.605. The scratch Swin final validation loss is 4.6087, which is essentially chance behavior. In contrast, the pretrained Swin losses are much lower, showing that the classifier heads are learning a meaningful mapping from frozen features to CIFAR-100 classes.
+
+The extended cached-head experiment adds another view of the same transfer-learning behavior. The extended curves show that the classifier head learns quickly, reaches a plateau, and then begins to show mild overfitting: training accuracy continues rising toward 100\% while test accuracy stabilizes or slightly drifts. This is exactly the pattern expected when the backbone is frozen and the head gradually memorizes the finite training subset. The best generalization occurs before the end of the 100-epoch run, which suggests that early stopping or validation-based model selection would be useful in a production version of this experiment.
+
 The plot below shows the per-epoch loss and accuracy curves for each Problem 2 run.
 \begin{center}
 \includegraphics[width=0.9\linewidth]{../Results_Problem_2/problem2_training_curves.png}
@@ -207,6 +236,10 @@ The next plot summarizes the final Problem 2 tradeoffs by comparing accuracy, av
 
 \section*{Conclusion}
 The results support two main takeaways. First, ResNet-18 substantially outperformed all from-scratch ViT configurations after 10 epochs on CIFAR-100, and ViT-A was the best transformer configuration among the four tested. Second, pretrained Swin feature extractors were much stronger than scratch Swin under the same five-epoch Problem 2 schedule, showing the practical value of transfer learning when compute and training time are limited.
+
+Across both problems, the consistent pattern is that transformers are sensitive to training regime. A transformer trained from scratch on CIFAR-100 with a short schedule is difficult to optimize, while a transformer with a pretrained visual backbone is immediately useful. This explains why the best transformer result in the homework is not the largest scratch ViT or the scratch Swin, but the pretrained Swin-Small model with a frozen backbone.
+
+The results also show that computation must be interpreted together with accuracy. A model can be cheaper but less accurate, as seen with the larger-patch ViTs. A model can be larger but more useful because its pretrained features transfer well, as seen with Swin-Small. A model can also have many trainable parameters and still fail under the schedule, as seen with scratch Swin. For this homework, the strongest practical model is pretrained Swin-Small, while the strongest from-scratch baseline is ResNet-18.
 
 \section*{Assumptions and Limitations}
 The main experiments follow the epoch counts and hyperparameters stated in the assignment. The extended 100-epoch cached-head run is included only as extra diagnostic evidence for training trends; it is not used to replace the required Problem 2 five-epoch comparison. The reported validation columns are measured on the official CIFAR-100 test split, because the assignment asks for final test accuracy and no separate validation split was required. The from-scratch transformer results are limited by the short training schedule, which is why the discussion emphasizes optimization behavior instead of presenting the low ViT/Swin scratch accuracies as architecture limits.
