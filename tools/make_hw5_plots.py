@@ -31,6 +31,8 @@ DISPLAY_NAMES = {
     "swin_tiny_pretrained": "Swin-Tiny\npretrained",
     "swin_small_pretrained": "Swin-Small\npretrained",
     "swin_scratch": "Scratch\nSwin",
+    "swin_tiny_cached_extended": "Swin-Tiny\ncached head",
+    "swin_small_cached_extended": "Swin-Small\ncached head",
 }
 
 
@@ -410,8 +412,11 @@ def main() -> None:
     maybe_plot_epoch_details(P2 / "problem2_history.csv", "problem2_epoch_detail.png", "Homework 5 Problem 2: Per-Model Accuracy Points")
     maybe_plot_metric_grid(P1 / "problem1_history.csv", "problem1_metric_grid.png", "Homework 5 Problem 1: Per-Epoch Metric Grid")
     maybe_plot_metric_grid(P2 / "problem2_history.csv", "problem2_metric_grid.png", "Homework 5 Problem 2: Per-Epoch Metric Grid")
+    maybe_plot_history(P2 / "problem2_extended_history.csv", "problem2_extended_training_curves.png", "Homework 5 Problem 2 Extended Cached-Head Runs")
+    maybe_plot_metric_grid(P2 / "problem2_extended_history.csv", "problem2_extended_metric_grid.png", "Homework 5 Problem 2: Extended 30-Epoch Metric Grid")
     maybe_plot_interpolated_trends(P1 / "problem1_history.csv", "problem1_interpolated_trends.png", "Homework 5 Problem 1: Reference-Style Trend Curves")
     maybe_plot_interpolated_trends(P2 / "problem2_history.csv", "problem2_interpolated_trends.png", "Homework 5 Problem 2: Reference-Style Trend Curves")
+    maybe_plot_interpolated_trends(P2 / "problem2_extended_history.csv", "problem2_extended_interpolated_trends.png", "Homework 5 Problem 2: Extended 30-Epoch Trend Curves")
     plot_problem1_tradeoffs()
     plot_problem2_tradeoffs()
 

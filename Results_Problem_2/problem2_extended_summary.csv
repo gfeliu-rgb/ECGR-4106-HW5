@@ -1,0 +1,3 @@
+model_name,source_model,epochs,batch_size,learning_rate,feature_dim,train_samples,test_samples,feature_extract_time_sec,head_train_time_sec,final_train_loss,final_test_loss,final_test_accuracy_pct,notes
+swin_tiny_cached_extended,microsoft/swin-tiny-patch4-window7-224,30,512,0.001,768,10000,2000,0.0,5.817792362999171,0.30625884194374087,1.0256559505462646,71.75,cached frozen-backbone head training; device=cpu
+swin_small_cached_extended,microsoft/swin-small-patch4-window7-224,30,512,0.001,768,10000,2000,0.0,6.998899958998663,0.2869289691448212,0.9230620632171631,74.25,cached frozen-backbone head training; device=cpu
